@@ -5,8 +5,8 @@ package md5
 import "C"
 
 import (
-	"hash"
 	"errors"
+	"hash"
 	"unsafe"
 )
 
@@ -41,13 +41,13 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 		(C.size_t)(len(p))) == 1 {
 		return len(p), nil
 	}
-		
+
 	return 0, errors.New("MD5_Update failed")
 }
 
 func (d *digest) Sum(in []byte) []byte {
 	context := *d.context
-	defer func() {*d.context = context}()
+	defer func() { *d.context = context }()
 
 	md := make([]byte, Size)
 	if C.MD5_Final((*_Ctype_unsignedchar)(&md[0]), d.context) == 1 {
