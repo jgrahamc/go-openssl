@@ -5,10 +5,15 @@ package sha1
 import "C"
 
 import (
+	"crypto"
 	"errors"
 	"hash"
 	"unsafe"
 )
+
+func init() {
+	crypto.RegisterHash(crypto.SHA1, New)
+}
 
 // The size of an SHA1 checksum in bytes.
 const Size = 20
@@ -38,7 +43,7 @@ func (d *digest) BlockSize() int { return BlockSize }
 
 func (d *digest) Write(p []byte) (nn int, err error) {
 	if len(p) == 0 || C.SHA1_Update(d.context, unsafe.Pointer(&p[0]),
-		(C.size_t)(len(p))) == 1 {
+		C.size_t(len(p))) == 1 {
 		return len(p), nil
 	}
 
