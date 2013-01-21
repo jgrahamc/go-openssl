@@ -44,10 +44,10 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 	return 0, errors.New("SHA1_Update failed")
 }
 
-// Note that this is different from the native Go package sha1.Sum()
-// because it resets the hash and so an sha1.Write() after calling this
-// will be starting with a reset hash.
 func (d *digest) Sum(in []byte) []byte {
+	context := *d.context
+	defer func() {*d.context = context}()
+
 	md := make([]byte, Size)
 	if C.SHA1_Final((*_Ctype_unsignedchar)(&md[0]), d.context) == 1 {
 		return append(in, md...)
