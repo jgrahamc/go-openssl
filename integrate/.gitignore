@@ -1,0 +1,10 @@
+test.txt
+go/
+go-openssl/
+*~
+tester
+.build-go
+.fixup-go
+.get-go
+.get-go-openssl
+
