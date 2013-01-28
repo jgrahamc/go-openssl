@@ -22,6 +22,7 @@ GOCRYPTO := $(GOSRC)pkg/crypto/
 copy = cp $(GOOPENSSL)$1/$1.go $(GOCRYPTO)$1
 
 MD5 := $(GOCRYPTO)md5/
+RC4 := $(GOCRYPTO)rc4/
 GOMD5 := $(GOCRYPTO)gomd5/
 
 # This target modifies the Go installation in the following ways:
@@ -44,6 +45,9 @@ GOMD5 := $(GOCRYPTO)gomd5/
 #    they are not needed.
 #
 # 6. Copies in the OpenSSL md5, sha1 and rc4.
+#
+# 7. Modifies rc4.go to use either C.ulong or C.size_t depending on
+#    how the RC4 function is defined by OpenSSL
 
 define NEW_EXCEPTIONS
 pkg crypto/md5, const BlockSize ideal-int
@@ -61,6 +65,8 @@ pkg crypto/rc4, type KeySizeError int
 endef
 export NEW_EXCEPTIONS
 
+RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
+
 .fixup-go: .get-go .get-go-openssl
 .fixup-go:
 	@cp -r $(MD5) $(GOMD5)
@@ -71,6 +77,7 @@ export NEW_EXCEPTIONS
 	@$(call copy,md5)
 	@$(call copy,sha1)
 	@$(call copy,rc4)
+	@$(if $(RC4SIZE_T),,sed -i~ -e 's/size_t/ulong/' $(RC4)rc4.go)
 	@touch $@
 
 .get-go: ; @rm -rf $(GO) && hg clone https://code.google.com/p/go $(GO) && touch $@
