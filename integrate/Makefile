@@ -62,6 +62,8 @@ pkg crypto/rc4, method (*Cipher) XORKeyStream([]byte, []byte)
 pkg crypto/rc4, method (KeySizeError) Error() string
 pkg crypto/rc4, type Cipher struct
 pkg crypto/rc4, type KeySizeError int
+pkg crypto/rc4, func NewCipher([]uint8) (*Cipher, error)
+pkg crypto/rc4, method (*Cipher) XORKeyStream([]uint8, []uint8)
 endef
 export NEW_EXCEPTIONS
 
