@@ -76,6 +76,7 @@ RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
 	@sed -i~ -e 's/"crypto\/\(md5\|sha1\|rc4\)":\( *\){"L3"},/"crypto\/\1":\2{"L3", "C"},/' $(GOSRC)pkg/go/build/deps_test.go
 	@echo "$$NEW_EXCEPTIONS" >> $(GO)api/except.txt
 	@rm $(addprefix $(GOCRYPTO),md5/md5block.go sha1/sha1block.go)
+	@rm $(addprefix $(GOCRYPTO)rc4/,rc4_amd64.s rc4_asm.go rc4_ref.go)
 	@$(call copy,md5)
 	@$(call copy,sha1)
 	@$(call copy,rc4)
