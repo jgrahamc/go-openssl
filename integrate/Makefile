@@ -67,7 +67,10 @@ pkg crypto/rc4, method (*Cipher) XORKeyStream([]uint8, []uint8)
 endef
 export NEW_EXCEPTIONS
 
-RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
+ifeq ($(UNAME), Darwin)
+else
+    RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
+endif
 
 .fixup-go: .get-go .get-go-openssl
 .fixup-go:
@@ -80,6 +83,7 @@ RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
 	@$(call copy,md5)
 	@$(call copy,sha1)
 	@$(call copy,rc4)
+	@$(ifeq $($(UNAME), Darwin),sed -i~ -e 's/size_t/ulong/' $(MD5)md5.go,)
 	@$(if $(RC4SIZE_T),,sed -i~ -e 's/size_t/ulong/' $(RC4)rc4.go)
 	@touch $@
 
