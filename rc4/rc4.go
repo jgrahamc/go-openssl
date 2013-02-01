@@ -2,7 +2,6 @@ package rc4
 
 // #cgo LDFLAGS: -lcrypto
 // #include <openssl/rc4.h>
-
 import "C"
 
 import (
