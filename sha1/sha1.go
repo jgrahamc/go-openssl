@@ -1,11 +1,11 @@
 package sha1
 
-// #cgo LDFLAGS: -lcrypto
 // #if defined( __APPLE__ )
 //     #define COMMON_DIGEST_FOR_OPENSSL
 //     #include <CommonCrypto/CommonDigest.h>
 //     #define SHA1                CC_SHA1
 // #else
+//    #cgo LDFLAGS: -lcrypto
 //    #include <openssl/sha.h>
 // #endif
 import "C"

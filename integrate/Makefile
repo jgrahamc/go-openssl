@@ -19,9 +19,10 @@ all: .build-go
 GOSRC := $(GO)src/
 GOCRYPTO := $(GOSRC)pkg/crypto/
 
-copy = cp $(GOOPENSSL)$1/$1.go $(GOCRYPTO)$1
+copy = cp $(GOOPENSSL)$(if $2,$2,$1)/$1.go $(GOCRYPTO)$1/$1.go
 
 MD5 := $(GOCRYPTO)md5/
+SHA1 := $(GOCRYPTO)sha1/
 RC4 := $(GOCRYPTO)rc4/
 GOMD5 := $(GOCRYPTO)gomd5/
 
@@ -48,6 +49,10 @@ GOMD5 := $(GOCRYPTO)gomd5/
 #
 # 7. Modifies rc4.go to use either C.ulong or C.size_t depending on
 #    how the RC4 function is defined by OpenSSL
+#
+# 8. Does a bunch of work if the operating system is Darwin (i.e Mac
+#    OS X) because Apple (in their infinite wisdom) have decided to
+#    deprecate OpenSSL.
 
 define NEW_EXCEPTIONS
 pkg crypto/md5, const BlockSize ideal-int
@@ -67,23 +72,42 @@ pkg crypto/rc4, method (*Cipher) XORKeyStream([]uint8, []uint8)
 endef
 export NEW_EXCEPTIONS
 
-ifeq ($(UNAME), Darwin)
+IS_DARWIN :=
+RC4SIZE_T :=
+
+UNAME := $(shell uname)
+
+ifeq ($(UNAME),Darwin)
+IS_DARWIN := T
 else
-    RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
+RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
 endif
 
 .fixup-go: .get-go .get-go-openssl
-.fixup-go:
+.fixup-go: .movemd5 .fixapi .copyopenssl
+.movemd5:
 	@cp -r $(MD5) $(GOMD5)
 	@sed -i~ -e 's/md5/gomd5/' $(addprefix $(GOMD5),md5.go md5block.go md5_test.go) $(GOSRC)cmd/cgo/main.go
-	@sed -i~ -e 's/"crypto\/\(md5\|sha1\|rc4\)":\( *\){"L3"},/"crypto\/\1":\2{"L3", "C"},/' $(GOSRC)pkg/go/build/deps_test.go
+	@touch $@
+
+DEPS := $(GOSRC)pkg/go/build/deps_test.go
+
+.fixapi:
+	@sed -i~ -e 's/"crypto\/md5":\( *\){"L3"},/"crypto\/md5":\1{"L3", "C"},/' $(DEPS)
+	@sed -i~ -e 's/"crypto\/sha1":\( *\){"L3"},/"crypto\/sha1":\1{"L3", "C"},/' $(DEPS)
+	@sed -i~ -e 's/"crypto\/rc4":\( *\){"L3"},/"crypto\/rc4":\1{"L3", "C"},/' $(DEPS)
 	@echo "$$NEW_EXCEPTIONS" >> $(GO)api/except.txt
-	@rm $(addprefix $(GOCRYPTO),md5/md5block.go sha1/sha1block.go)
-	@rm $(addprefix $(GOCRYPTO)rc4/,rc4_amd64.s rc4_asm.go rc4_ref.go)
+	@touch $@
+
+.copyopenssl:
+	@rm -f $(addprefix $(GOCRYPTO),md5/md5block.go sha1/sha1block.go)
+	@rm -f $(addprefix $(GOCRYPTO)rc4/,rc4_amd64.s rc4_asm.go rc4_ref.go)
 	@$(call copy,md5)
 	@$(call copy,sha1)
-	@$(call copy,rc4)
-	@$(ifeq $($(UNAME), Darwin),sed -i~ -e 's/size_t/ulong/' $(MD5)md5.go,)
+	@$(if $(IS_DARWIN),$(call copy,rc4_darwin,rc4),$(call copy,rc4))
+	@$(if $(IS_DARWIN),sed -i~ -e 's/C.size_t/_Ctype_CC_LONG/' $(MD5)md5.go $(SHA1)sha1.go)
+	@$(if $(IS_DARWIN),sed -i~ -e 's/_Ctype_MD5_CTX/_Ctype_CC_MD5_CTX/' $(MD5)md5.go)
+	@$(if $(IS_DARWIN),sed -i~ -e 's/_Ctype_SHA_CTX/_Ctype_CC_SHA1_CTX/' $(SHA1)sha1.go)
 	@$(if $(RC4SIZE_T),,sed -i~ -e 's/size_t/ulong/' $(RC4)rc4.go)
 	@touch $@
 
