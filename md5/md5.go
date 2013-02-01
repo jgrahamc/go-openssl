@@ -50,7 +50,7 @@ func (d *digest) BlockSize() int { return BlockSize }
 
 func (d *digest) Write(p []byte) (nn int, err error) {
 	if len(p) == 0 || C.MD5_Update(d.context, unsafe.Pointer(&p[0]),
-		C.ulong(len(p))) == 1 {
+		C.size_t(len(p))) == 1 {
 		return len(p), nil
 	}
 
