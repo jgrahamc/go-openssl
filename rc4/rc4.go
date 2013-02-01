@@ -1,7 +1,13 @@
 package rc4
 
 // #cgo LDFLAGS: -lcrypto
-// #include <openssl/rc4.h>
+// #if defined( __APPLE__ )
+//     #define COMMON_DIGEST_FOR_OPENSSL
+//     #include <CommonCrypto/CommonDigest.h>
+// #else
+//    #include <openssl/rc4.h>
+// #endif
+
 import "C"
 
 import (

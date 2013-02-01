@@ -1,7 +1,14 @@
 package md5
 
 // #cgo LDFLAGS: -lcrypto
-// #include <openssl/md5.h>
+// #if defined( __APPLE__ )
+//     #include <CommonCrypto/CommonDigest.h>
+//     #define MD5_Init            CC_MD5_Init
+//     #define MD5_Update          CC_MD5_Update
+//     #define MD5_Final           CC_MD5_Final
+// #else
+//    #include <openssl/md5.h>
+// #endif
 import "C"
 
 import (
@@ -43,7 +50,7 @@ func (d *digest) BlockSize() int { return BlockSize }
 
 func (d *digest) Write(p []byte) (nn int, err error) {
 	if len(p) == 0 || C.MD5_Update(d.context, unsafe.Pointer(&p[0]),
-		C.size_t(len(p))) == 1 {
+		C.ulong(len(p))) == 1 {
 		return len(p), nil
 	}
 
