@@ -115,7 +115,7 @@ DEPS := $(GOSRC)pkg/go/build/deps_test.go
 .get-go-openssl: ; @rm -rf $(GOOPENSSL) && git clone git://github.com/jgrahamc/go-openssl.git $(GOOPENSSL) && touch $@
 
 .PHONY: clean
-clean: ; @rm -f .get-go .get-go-openssl .fixup-go .build-go
+clean: ; @rm -f .get-go .get-go-openssl .fixup-go .build-go .copyopenssl .fixapi .movemd5
 
 .PHONY: tester
 tester: .build-go
