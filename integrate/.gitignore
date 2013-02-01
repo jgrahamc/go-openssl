@@ -7,4 +7,7 @@ tester
 .fixup-go
 .get-go
 .get-go-openssl
+.movemd5
+.fixapi
+.copyopenssl
 
