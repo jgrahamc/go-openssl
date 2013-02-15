@@ -111,7 +111,11 @@ DEPS := $(GOSRC)pkg/go/build/deps_test.go
 	@$(if $(RC4SIZE_T),,sed -i~ -e 's/size_t/ulong/' $(RC4)rc4.go)
 	@touch $@
 
-.get-go: ; @rm -rf $(GO) && hg clone https://code.google.com/p/go $(GO) && touch $@
+ifneq ($(REV),)
+override REV := --rev $(REV)
+endif
+
+.get-go: ; @rm -rf $(GO) && hg clone $(REV) https://code.google.com/p/go $(GO) && touch $@
 .get-go-openssl: ; @rm -rf $(GOOPENSSL) && git clone git://github.com/jgrahamc/go-openssl.git $(GOOPENSSL) && touch $@
 
 .PHONY: clean
