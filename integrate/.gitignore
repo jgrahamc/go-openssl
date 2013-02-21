@@ -10,4 +10,5 @@ tester
 .movemd5
 .fixapi
 .copyopenssl
+.addfd
 

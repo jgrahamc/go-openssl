@@ -26,6 +26,10 @@ SHA1 := $(GOCRYPTO)sha1/
 RC4 := $(GOCRYPTO)rc4/
 GOMD5 := $(GOCRYPTO)gomd5/
 
+NETSRC := $(GOSRC)/pkg/net/
+TCPSOCK := $(NETSRC)tcpsock_posix.go
+FD := $(NETSRC)fd_unix.go
+
 # This target modifies the Go installation in the following ways:
 #
 # 1. Copies the native Go md5 implementation and calls it crypto/gomd5
@@ -85,6 +89,7 @@ endif
 
 .fixup-go: .get-go .get-go-openssl
 .fixup-go: .movemd5 .fixapi .copyopenssl
+.fixup-go: .addfd
 .movemd5:
 	@cp -r $(MD5) $(GOMD5)
 	@sed -i~ -e 's/md5/gomd5/' $(addprefix $(GOMD5),md5.go md5block.go md5_test.go) $(GOSRC)cmd/cgo/main.go
@@ -111,6 +116,11 @@ DEPS := $(GOSRC)pkg/go/build/deps_test.go
 	@$(if $(RC4SIZE_T),,sed -i~ -e 's/size_t/ulong/' $(RC4)rc4.go)
 	@touch $@
 
+.addfd:
+	@echo "func (c *TCPConn) Fd() int {	return c.fd.Fd() }" >> $(TCPSOCK)
+	@echo "func (fd *netFD) Fd() int { return fd.sysfd }" >> $(FD)
+	@touch $@
+
 ifneq ($(REV),)
 override REV := --rev $(REV)
 endif
@@ -119,7 +129,7 @@ endif
 .get-go-openssl: ; @rm -rf $(GOOPENSSL) && git clone git://github.com/jgrahamc/go-openssl.git $(GOOPENSSL) && touch $@
 
 .PHONY: clean
-clean: ; @rm -f .get-go .get-go-openssl .fixup-go .build-go .copyopenssl .fixapi .movemd5
+clean: ; @rm -f .get-go .get-go-openssl .fixup-go .build-go .copyopenssl .fixapi .movemd5 .addfd
 
 .PHONY: tester
 tester: .build-go
