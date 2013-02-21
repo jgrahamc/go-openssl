@@ -19,7 +19,7 @@ all: .build-go
 GOSRC := $(GO)src/
 GOCRYPTO := $(GOSRC)pkg/crypto/
 
-copy = cp $(GOOPENSSL)$(if $2,$2,$1)/$1.go $(GOCRYPTO)$1/$1.go
+copy = cp $(GOOPENSSL)$1/$(if $2,$2,$1).go $(GOCRYPTO)$1/$1.go
 
 MD5 := $(GOCRYPTO)md5/
 SHA1 := $(GOCRYPTO)sha1/
@@ -83,6 +83,7 @@ UNAME := $(shell uname)
 
 ifeq ($(UNAME),Darwin)
 IS_DARWIN := T
+RC4SIZE_T := T
 else
 RC4SIZE_T := $(shell grep size_t /usr/include/openssl/rc4.h)
 endif
@@ -109,7 +110,7 @@ DEPS := $(GOSRC)pkg/go/build/deps_test.go
 	@rm -f $(addprefix $(GOCRYPTO)rc4/,rc4_amd64.s rc4_asm.go rc4_ref.go)
 	@$(call copy,md5)
 	@$(call copy,sha1)
-	@$(if $(IS_DARWIN),$(call copy,rc4_darwin,rc4),$(call copy,rc4))
+	@$(if $(IS_DARWIN),$(call copy,rc4,rc4_darwin),$(call copy,rc4))
 	@$(if $(IS_DARWIN),sed -i~ -e 's/C.size_t/_Ctype_CC_LONG/' $(MD5)md5.go $(SHA1)sha1.go)
 	@$(if $(IS_DARWIN),sed -i~ -e 's/_Ctype_MD5_CTX/_Ctype_CC_MD5_CTX/' $(MD5)md5.go)
 	@$(if $(IS_DARWIN),sed -i~ -e 's/_Ctype_SHA_CTX/_Ctype_CC_SHA1_CTX/' $(SHA1)sha1.go)
